@@ -3,11 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
   <title>Weather</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-weather="clear-day">
   <main class="app">
+    <header class="glass top">
+      <p id="greeting" class="greeting">Hello, Emory Lowe</p>
+      <div class="theme-switch" role="radiogroup" aria-label="Theme">
+        <button type="button" data-theme-option="light" role="radio">Light</button>
+        <button type="button" data-theme-option="dark" role="radio">Dark</button>
+        <button type="button" data-theme-option="system" role="radio">System</button>
+      </div>
+    </header>
+
     <form id="search" class="glass search" autocomplete="off">
       <input id="query" type="text" placeholder="Search for a city" aria-label="City">
     </form>

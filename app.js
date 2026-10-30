@@ -1,4 +1,5 @@
 const DEFAULT = { name: "Boca Raton", lat: 26.3683, lon: -80.1289 };
+const USER_NAME = "Emory Lowe";
 
 // WMO weather codes -> [description, day icon, night icon]
 const CODES = {
@@ -20,6 +21,44 @@ const info = (code, isDay = 1) => {
 };
 
 const $ = (id) => document.getElementById(id);
+
+// Map a WMO code to a background scene (see body[data-weather] in style.css)
+function weatherScene(code, isDay) {
+  if (code >= 95) return "storm";
+  if (code >= 71 && code <= 77) return "snow";
+  if (code >= 51) return "rain";
+  if (code === 45 || code === 48) return "fog";
+  if (code === 3) return "cloudy";
+  return isDay ? "clear-day" : "clear-night";
+}
+
+// Theme: "light", "dark" or "system" (follows the OS setting)
+const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+let themeChoice = "system";
+try { themeChoice = localStorage.getItem("theme") || "system"; } catch {}
+
+function applyTheme() {
+  const dark = themeChoice === "dark" || (themeChoice === "system" && darkQuery.matches);
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  document.querySelectorAll("[data-theme-option]").forEach((b) =>
+    b.setAttribute("aria-checked", b.dataset.themeOption === themeChoice));
+}
+
+document.querySelectorAll("[data-theme-option]").forEach((b) =>
+  b.addEventListener("click", () => {
+    themeChoice = b.dataset.themeOption;
+    try { localStorage.setItem("theme", themeChoice); } catch {}
+    applyTheme();
+  }));
+darkQuery.addEventListener("change", applyTheme);
+applyTheme();
+
+function greet() {
+  const h = new Date().getHours();
+  const part = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+  $("greeting").textContent = `${part}, ${USER_NAME}`;
+}
+greet();
 
 async function loadWeather({ name, lat, lon }) {
   const url = "https://api.open-meteo.com/v1/forecast"
@@ -51,10 +90,7 @@ function render(name, data) {
   $("wind").textContent = `${Math.round(cur.wind_speed_10m)} mph`;
   $("uv").textContent = Math.round(daily.uv_index_max[0]);
 
-  // Background mood
-  const code = cur.weather_code;
-  document.body.className =
-    !cur.is_day ? "night" : code >= 51 ? "rainy" : code >= 3 ? "cloudy" : "";
+  document.body.dataset.weather = weatherScene(cur.weather_code, cur.is_day);
 
   // Next 24 hours starting from the current hour
   const start = hourly.time.findIndex((t) => t >= cur.time.slice(0, 13));
